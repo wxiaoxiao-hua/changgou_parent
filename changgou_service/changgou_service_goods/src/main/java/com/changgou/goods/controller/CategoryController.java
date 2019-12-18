@@ -103,5 +103,18 @@ public class CategoryController {
         return new Result(true,StatusCode.OK,"查询成功",pageResult);
     }
 
+    // 分类的一级]
+    @GetMapping("/category")
+    public Result findByParentId(){
+        List<Map> categoryList = categoryService.findByParentId(0);
+        return new Result(true,StatusCode.OK,"",categoryList);
+    }
+
+    // 分类的二级,三级
+    @GetMapping("/category/{parentId}")
+    public Result findByParentId(@PathVariable Integer parentId){
+        List<Map> categoryList = categoryService.findByParentId(parentId);
+        return new Result(true,StatusCode.OK,"",categoryList);
+    }
 
 }

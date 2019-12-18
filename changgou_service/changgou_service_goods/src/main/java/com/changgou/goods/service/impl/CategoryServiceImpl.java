@@ -151,4 +151,10 @@ public class CategoryServiceImpl implements CategoryService {
         return example;
     }
 
+    // 查询一级,二级,三级分类
+    @Override
+    public List<Map> findByParentId(Integer parentId) {
+        return categoryMapper.findByParentId(parentId);
+    }
+
 }
