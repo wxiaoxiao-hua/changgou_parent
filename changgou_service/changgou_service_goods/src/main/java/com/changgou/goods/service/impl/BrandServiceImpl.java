@@ -164,4 +164,10 @@ public class BrandServiceImpl implements BrandService {
         Page<Brand> pageInfo = (Page<Brand>) brandMapper.selectByExample(example);
         return pageInfo;
     }
+
+    // 根据分类名称查询对应的品牌信息
+    @Override
+    public List<Map> findListByCategoryName(String categoryName) {
+        return brandMapper.findListByCategoryName(categoryName);
+    }
 }

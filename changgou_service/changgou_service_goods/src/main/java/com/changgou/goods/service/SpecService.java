@@ -63,7 +63,8 @@ public interface SpecService {
      */
     Page<Spec> findPage(Map<String, Object> searchMap, int page, int size);
 
-
+    // 根据分类的名称来查询对应的规格的信息
+    List<Map> findListByCategoryName(String categoryName);
 
 
 }

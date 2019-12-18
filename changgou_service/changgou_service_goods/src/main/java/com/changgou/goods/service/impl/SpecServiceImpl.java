@@ -139,4 +139,17 @@ public class SpecServiceImpl implements SpecService {
         return example;
     }
 
+    // 根据分类名称查询对应的 规格信息
+    @Override
+    public List<Map> findListByCategoryName(String categoryName) {
+        // 因为option是用逗号隔开的,要进行处理
+        List<Map> specList = specMapper.findListByCategoryName(categoryName);
+        for (Map spec:specList){
+            String option = (String) spec.get("options");
+            String[] options = option.split(",");
+            spec.put("options",options);
+        }
+        return specList;
+    }
+
 }

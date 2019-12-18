@@ -103,5 +103,11 @@ public class SpecController {
         return new Result(true,StatusCode.OK,"查询成功",pageResult);
     }
 
+    // 根据分类名称查询 对应的规格信息
+    @GetMapping("/category/{categoryName}")
+    public Result findListByCategoryName(@PathVariable String categoryName){
+        List<Map> specList = specService.findListByCategoryName(categoryName);
+        return new Result(true,StatusCode.OK,"",specList);
+    }
 
 }

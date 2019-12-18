@@ -63,6 +63,8 @@ public interface BrandService {
      */
     Page<Brand> findPage(Map<String, Object> searchMap, Integer page, Integer size);
 
+    // 根据分类名称查询品牌的列表
+    List<Map> findListByCategoryName(String categoryName);
 
 
 

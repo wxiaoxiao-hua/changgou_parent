@@ -104,5 +104,12 @@ public class BrandController implements BrandApi {
         return new Result(true,StatusCode.OK,"查询成功",pageResult);
     }
 
+    // 根据分类名称查询品牌的列表
+    @GetMapping("/category/{categoryName}")
+    public Result findListByCategoryName(@PathVariable String categoryName){
+        System.out.println(categoryName);
+        List<Map> brandList = brandService.findListByCategoryName(categoryName);
+        return new Result(true,StatusCode.OK,"",brandList);
+    }
 
 }
