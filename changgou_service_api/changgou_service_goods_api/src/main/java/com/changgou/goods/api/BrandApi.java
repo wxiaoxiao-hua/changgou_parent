@@ -95,4 +95,10 @@ public interface BrandApi {
 //    })
     public Result findPage(Map searchMap, Integer page, Integer size);
 
+    @ApiOperation("分类名称查询品牌列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "categoryName",value = "分类名称",required=true,paramType="path",dataType="String")
+    })
+    public Result findListByCategoryName(String categoryName);
+
 }

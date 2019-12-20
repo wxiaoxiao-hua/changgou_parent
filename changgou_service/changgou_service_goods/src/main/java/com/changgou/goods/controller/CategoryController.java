@@ -2,6 +2,7 @@ package com.changgou.goods.controller;
 import com.changgou.common.entity.PageResult;
 import com.changgou.common.entity.Result;
 import com.changgou.common.entity.StatusCode;
+import com.changgou.goods.api.CategoryApi;
 import com.changgou.goods.service.CategoryService;
 import com.changgou.goods.pojo.Category;
 import com.github.pagehelper.Page;
@@ -12,7 +13,7 @@ import java.util.Map;
 @RestController
 @CrossOrigin
 @RequestMapping("/category")
-public class CategoryController {
+public class CategoryController implements CategoryApi{
 
 
     @Autowired
@@ -103,7 +104,7 @@ public class CategoryController {
         return new Result(true,StatusCode.OK,"查询成功",pageResult);
     }
 
-    // 分类的一级]
+    // 分类的一级
     @GetMapping("/category")
     public Result findByParentId(){
         List<Map> categoryList = categoryService.findByParentId(0);

@@ -2,6 +2,7 @@ package com.changgou.goods.controller;
 import com.changgou.common.entity.PageResult;
 import com.changgou.common.entity.Result;
 import com.changgou.common.entity.StatusCode;
+import com.changgou.goods.api.AlbumApi;
 import com.changgou.goods.service.AlbumService;
 import com.changgou.goods.pojo.Album;
 import com.github.pagehelper.Page;
@@ -12,7 +13,7 @@ import java.util.Map;
 @RestController
 @CrossOrigin
 @RequestMapping("/album")
-public class AlbumController {
+public class AlbumController implements AlbumApi{
 
 
     @Autowired
