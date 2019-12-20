@@ -5,7 +5,7 @@ spring:
     gateway:
       globalcors: # 处理的是跨域操作
         cors-configurations:
-          '[/**]': # 这个的意思是可以匹配所有的请求
+          '[/**]': # 这个的意思是可以匹配所有的请求 key
             allowedOrigins: "*" # 跨域处理,允许所有的域
             allowedMethods: # 是说支持的有哪些方法     这里的写法是允许所有的路径的以下四种方法 访问这个网关
             - GET
@@ -19,12 +19,23 @@ spring:
         - Path=/goods/**
         filters:
         - StripPrefix= 1
+        - name: RequestRateLimiter # 这是一个请求数限流,(限流过滤器,使用的是gateway内置令牌算法)名字是固定的,只能这样写
+          args:
+            # 用于限流的键的解析器的 bean对象的名字,表达式根据 #{@beanName}从 Spring容器里获取bean对象
+            key-resolver: "#{@ipKeyResolver}"
+            # 这个是说令牌桶每秒填充的平均速率 等价于允许用户每秒处理多少个请求 平均数
+            redis-rate-limiter.replenishRate: 1
+            # 令牌桶的总容量 允许在一秒钟内完成的最大请求数量
+            redis-rate-limiter.burstCapacity: 1
       - id: system
         uri: lb://system
         predicates:
         - Path=/system/**
         filters:
         - StripPrefix= 1
+  redis:
+    host: 192.168.200.128
+    port: 6379
 server:
   port: 9101
 eureka:

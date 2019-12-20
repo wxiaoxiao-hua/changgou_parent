@@ -1,11 +1,15 @@
 package com.changgou.system.service.impl;
 
+import com.changgou.common.exception.ExceptionCast;
+import com.changgou.common.model.response.system.SystemCode;
 import com.changgou.system.dao.AdminMapper;
 import com.changgou.system.service.AdminService;
 import com.changgou.system.pojo.Admin;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 
@@ -44,6 +48,10 @@ public class AdminServiceImpl implements AdminService {
      */
     @Override
     public void add(Admin admin){
+        // 通过加密,生成新的密码
+        String password = BCrypt.hashpw(admin.getPassword(), BCrypt.gensalt());
+        // 把生成的密码设置给用户
+        admin.setPassword(password);
         adminMapper.insert(admin);
     }
 
@@ -104,6 +112,7 @@ public class AdminServiceImpl implements AdminService {
         return (Page<Admin>)adminMapper.selectByExample(example);
     }
 
+
     /**
      * 构建查询对象
      * @param searchMap
@@ -135,4 +144,14 @@ public class AdminServiceImpl implements AdminService {
         return example;
     }
 
+    // 写的是登录
+    @Override
+    public boolean login(Admin admin) {
+        // 判断是否输入了用户名
+        if(StringUtils.isBlank(admin.getLoginName())){
+            // isBlank() 这个方法的也就是说,为空字符串也不行
+            ExceptionCast.cast(SystemCode.SYSTEM_LOGIN_USERNAME_ERROR);
+        }
+        return false;
+    }
 }

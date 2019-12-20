@@ -7,9 +7,8 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.net.InetSocketAddress;
 
-public class UrlFilter implements GlobalFilter,Ordered {
+public class UrlFilter implements GlobalFilter,Ordered { // GlobalFilter 全局过滤器,会应用到所有的路由上
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         System.out.println("经过的第二个过滤器");
@@ -21,7 +20,7 @@ public class UrlFilter implements GlobalFilter,Ordered {
     }
 
     @Override
-    public int getOrder() {
+    public int getOrder() {  // 这个方法是给过滤器设置优先级别的,值越大,优先级越低
         return 2;
     }
 }
