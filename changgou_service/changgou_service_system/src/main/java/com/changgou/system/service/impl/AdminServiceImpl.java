@@ -155,18 +155,18 @@ public class AdminServiceImpl implements AdminService {
         if (StringUtils.isBlank(admin.getPassword())){
             ExceptionCast.cast(SystemCode.SYSTEM_LOGIN_PASSWORD_ERROR);
         }
-        // 根据登录名获取管理员信息
+        //根据登录名获取管理员信息
         Admin admin1 = new Admin();
-        admin.setLoginName(admin.getLoginName());
-        admin.setStatus("1"); //这里的1 代表的是已通过审核
-        Admin adminResult = adminMapper.selectOne(admin);
+        admin1.setLoginName(admin.getLoginName());
+        admin1.setStatus("1");  // 已审核
+        Admin adminResult = adminMapper.selectOne(admin1);
 
-        if(adminResult == null){
+        if (adminResult == null) {
             ExceptionCast.cast(SystemCode.SYSTEM_LOGIN_UNAUTHORISE);
         }
-        // 对密码进行校验
+        //对密码进行校验
         boolean checkpw = BCrypt.checkpw(admin.getPassword(), adminResult.getPassword());
-        if (!checkpw){
+        if (!checkpw) {
             ExceptionCast.cast(SystemCode.SYSTEM_LOGIN_USERNAMEORPASSWORD_ERROR);
         }
 
