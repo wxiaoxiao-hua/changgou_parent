@@ -5,12 +5,18 @@ import com.changgou.common.entity.Result;
 import com.changgou.common.entity.StatusCode;
 import com.changgou.system.pojo.Admin;
 import com.changgou.system.service.AdminService;
+import com.changgou.system.util.JwtUtil;
 import com.github.pagehelper.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
+import static java.awt.SystemColor.info;
+
 @RestController
 @CrossOrigin
 @RequestMapping("/admin")
@@ -105,5 +111,19 @@ public class AdminController {
         return new Result(true,StatusCode.OK,"查询成功",pageResult);
     }
 
+    @PostMapping("/login")
+    public Result login(@RequestBody Admin admin){
+        boolean login = adminService.login(admin);
+        if (login){
+            // 如果登录成功的话,就发放 token
+            Map<String,String> info = new HashMap<>();
+            info.put("username",admin.getLoginName());
+            String token = JwtUtil.createJWT(UUID.randomUUID().toString(), admin.getLoginName(), null);
+            info.put("token",token);
+            return new Result(true,StatusCode.OK,"登录成功",info);
+        }else{
+            return new Result(false,StatusCode.ERROR,"登录失败");
+        }
+    }
 
 }

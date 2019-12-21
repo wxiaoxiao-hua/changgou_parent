@@ -152,6 +152,24 @@ public class AdminServiceImpl implements AdminService {
             // isBlank() 这个方法的也就是说,为空字符串也不行
             ExceptionCast.cast(SystemCode.SYSTEM_LOGIN_USERNAME_ERROR);
         }
-        return false;
+        if (StringUtils.isBlank(admin.getPassword())){
+            ExceptionCast.cast(SystemCode.SYSTEM_LOGIN_PASSWORD_ERROR);
+        }
+        // 根据登录名获取管理员信息
+        Admin admin1 = new Admin();
+        admin.setLoginName(admin.getLoginName());
+        admin.setStatus("1"); //这里的1 代表的是已通过审核
+        Admin adminResult = adminMapper.selectOne(admin);
+
+        if(adminResult == null){
+            ExceptionCast.cast(SystemCode.SYSTEM_LOGIN_UNAUTHORISE);
+        }
+        // 对密码进行校验
+        boolean checkpw = BCrypt.checkpw(admin.getPassword(), adminResult.getPassword());
+        if (!checkpw){
+            ExceptionCast.cast(SystemCode.SYSTEM_LOGIN_USERNAMEORPASSWORD_ERROR);
+        }
+
+        return checkpw;
     }
 }

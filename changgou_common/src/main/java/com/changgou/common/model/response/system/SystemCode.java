@@ -6,8 +6,8 @@ import lombok.ToString;
 
 @ToString
 public enum  SystemCode implements ResultCode {
-    SYSTEM_LOGIN_USERNAME_ERROR(false,26001,"请输入用户名"),
-    SYSTEM_LOGIN_PASSWORD_ERROR(false,26002,"请输入密码"),
+    SYSTEM_LOGIN_USERNAME_ERROR(false,26001,"请输入用户名称"),
+    SYSTEM_LOGIN_PASSWORD_ERROR(false,26002,"请输入登录密码"),
     SYSTEM_LOGIN_UNAUTHORISE(false,26003,"无访问权限"),
     SYSTEM_LOGIN_USERNAMEORPASSWORD_ERROR(false,26004,"用户名或密码错误");
 
