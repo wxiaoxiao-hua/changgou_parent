@@ -30,18 +30,6 @@ public class SpuController {
     }
 
     /***
-     * 根据ID查询数据
-     * @param id
-     * @return
-     */
-    @GetMapping("/{id}")
-    public Result findById(@PathVariable String id){
-        Goods goods = spuService.findGoodsById(id);
-        return new Result(true,StatusCode.OK,"查询成功",goods);
-    }
-
-
-    /***
      * 新增数据
      * @param goods
      * @return
@@ -52,6 +40,16 @@ public class SpuController {
         return new Result(true,StatusCode.OK,"添加成功");
     }
 
+    /***
+     * 根据ID查询数据
+     * @param id
+     * @return
+     */
+    @GetMapping("/{id}")
+    public Result findById(@PathVariable String id){
+        Goods goods = spuService.findGoodsById(id);
+        return new Result(true,StatusCode.OK,"查询成功",goods);
+    }
 
     /***
      * 修改数据
@@ -61,6 +59,7 @@ public class SpuController {
      */
     @PutMapping(value="/{id}")
     public Result update(@RequestBody Goods goods,@PathVariable String id){
+        goods.getSpu().setId(id);
         spuService.update(goods);
         return new Result(true,StatusCode.OK,"修改成功");
     }
