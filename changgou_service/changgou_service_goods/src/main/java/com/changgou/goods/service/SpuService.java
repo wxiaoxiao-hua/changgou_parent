@@ -68,4 +68,9 @@ public interface SpuService {
     // 添加新的商品
     void add(Goods goods);
 
+    // 根据id查询对应的商品
+    public Goods findGoodsById(String id);
+
+    // 修改商品的信息
+    void update(Goods goods);
 }

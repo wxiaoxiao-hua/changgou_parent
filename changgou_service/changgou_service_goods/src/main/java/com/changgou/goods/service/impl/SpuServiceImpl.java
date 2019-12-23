@@ -251,6 +251,7 @@ public class SpuServiceImpl implements SpuService {
         // 调用这个类里面的新增sku的方法
         this.saveSkuList(goods);
     }
+
     //添加sku数据
     private void saveSkuList(Goods goods) {
         // 添加sku信息的时候,也直接建立分类和品牌之间的关系
@@ -316,4 +317,41 @@ public class SpuServiceImpl implements SpuService {
             skuMapper.insertSelective(sku);
         }
     }
+
+    // 根据id查询对应的商品信息
+    @Override
+    public Goods findGoodsById(String id) {
+        // 根据商品的id查询到spu的信息
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        // 封装查询的条件信息
+        Example example = new Example(Sku.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("spuId",id);
+        List<Sku> skuList = skuMapper.selectByExample(example);
+
+        Goods goods = new Goods();
+        goods.setSpu(spu);
+        goods.setSkuList(skuList);
+        return goods;
+    }
+
+    // 修改商品的信息
+    @Override
+    public void update(Goods goods) {
+        // 先取出spu的部分
+        Spu spu = goods.getSpu();
+        spuMapper.updateByPrimaryKey(spu);
+
+        // 再删除原本已经有的sku的数据,
+        Example example = new Example(Sku.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("spuId",spu.getId());
+        skuMapper.deleteByExample(example);
+
+        // 再将新的数据写回数据库
+        this.saveSkuList(goods);
+    }
+
+
+
 }
