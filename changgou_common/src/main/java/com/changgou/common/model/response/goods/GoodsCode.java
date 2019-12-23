@@ -7,7 +7,8 @@ import lombok.ToString;
 @ToString
 public enum GoodsCode implements ResultCode {
 
-    GOODS_BRAND_ADD_ERROR(false,22001,"商品添加失败");
+    GOODS_BRAND_ADD_ERROR(false,22001,"商品添加失败"),
+    GOODS_SPU_ADD_SPEC_ERROR(false,22002 ,"规格添加失败" );
 
     //操作是否成功
     boolean success;
