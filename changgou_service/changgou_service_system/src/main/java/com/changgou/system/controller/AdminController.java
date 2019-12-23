@@ -10,10 +10,7 @@ import com.github.pagehelper.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static java.awt.SystemColor.info;
 
@@ -113,12 +110,19 @@ public class AdminController {
 
     @PostMapping("/login")
     public Result login(@RequestBody Admin admin){
-        boolean login = adminService.login(admin);
-        if (login){
-            // 如果登录成功的话,就发放 token
+        boolean result = adminService.login(admin);
+        if (result){
+            // 密码是正确的话,生成jwt令牌返回到客户端
             Map<String,String> info = new HashMap<>();
             info.put("username",admin.getLoginName());
-            String token = JwtUtil.createJWT(UUID.randomUUID().toString(), admin.getLoginName(), null);
+            // 查询用户的所属权限,管理员权限是admin
+            List<String> roles = new ArrayList<>();
+            if(admin.getLoginName().equals("admin")){
+                // 假设是管理员的话,
+                roles.add("admin");
+            }
+            // 基于工具类生成的令牌
+            String token = JwtUtil.createJWT(UUID.randomUUID().toString(), admin.getLoginName(), null,roles);
             info.put("token",token);
             return new Result(true,StatusCode.OK,"登录成功",info);
         }else{

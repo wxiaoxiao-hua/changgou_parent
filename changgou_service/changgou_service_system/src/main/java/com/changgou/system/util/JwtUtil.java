@@ -1,13 +1,11 @@
 package com.changgou.system.util;
 
-import com.changgou.common.model.response.system.SystemCode;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.crypto.Data;
 import java.util.Base64;
 import java.util.Date;
 
@@ -18,9 +16,11 @@ public class JwtUtil {
     public static final Long JWT_TTL = 3600000L; //以毫秒为单位, 计算出来一个小时
     // 设置密钥明文
     public static final String JWT_KEY = "itcast";
+    // 附加信息
+    public static final String JWT_CLAIMS = "roles";
 
     // 创建token
-    public static String createJWT(String id,String subject,Long ttlMillis){
+    public static String createJWT(String id,String subject,Long ttlMillis,Object claims){
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
         //获取当前时间的毫秒值
         long nowMillis = System.currentTimeMillis();
@@ -40,6 +40,7 @@ public class JwtUtil {
                 .setIssuer("admin") // 签发者
                 .setIssuedAt(now) // 签发的时间
                 .signWith(signatureAlgorithm,secretKey)  // 使用HS256对称加密算法签名,第二个参数是密钥
+                .claim(JWT_CLAIMS,claims) // 附加信息
                 .setExpiration(expDate); // 设置过期时间
 
         return builder.compact();
