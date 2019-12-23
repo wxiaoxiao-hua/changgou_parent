@@ -234,86 +234,86 @@ public class SpuServiceImpl implements SpuService {
     // 添加新的商品
     @Override
     public void add(Goods goods) {
-            //1.添加spu
-            Spu spu = goods.getSpu();
-            //设置分布式id
-            long spuId = idWorker.nextId();
-            spu.setId(String.valueOf(spuId));
-            //设置删除状态.
-            spu.setIsDelete("0");
-            //上架状态
-            spu.setIsMarketable("0");
-            //审核状态
-            spu.setStatus("0");
-            spu.setIsEnableSpec("1");  // 默认是 启用规格
-            spuMapper.insertSelective(spu);
-            // 调用保存sku的方法,存入sku数据
-            this.saveSkuList(goods);
-}
+        // 先获取到spu信息
+        Spu spu = goods.getSpu();
+        // 根据分布式id给这个商品设置一个id值,得到的是long类型的id
+        long spuId = idWorker.nextId();
+        // 设置的id是字符串格式的
+        spu.setId(String.valueOf(spuId));
+        // 设置spu的删除状态为0,上架状态为0,审核状态是0, 启用规格默认的是启用 1
+        spu.setIsDelete("0");
+        spu.setIsMarketable("0");
+        spu.setStatus("0");
+        spu.setIsEnableSpec("1");
+        // 调用spuMapper里面的新增spu的方法
+        spuMapper.insertSelective(spu);
+
+        // 调用这个类里面的新增sku的方法
+        this.saveSkuList(goods);
+    }
     //添加sku数据
     private void saveSkuList(Goods goods) {
+        // 添加sku信息的时候,也直接建立分类和品牌之间的关系
+        // 获取spu对象
         Spu spu = goods.getSpu();
-        //查询分类对象
+        // 通过spu对象里面的分类id获取到对应的分类对象
         Category category = categoryMapper.selectByPrimaryKey(spu.getCategory3Id());
-
-        //查询品牌对象
+        // 通过spu对象里面的品牌id,获取到对应的品牌的信息
         Brand brand = brandMapper.selectByPrimaryKey(spu.getBrandId());
-
-        //设置品牌与分类的关联关系
-        //查询关联表
+        // 设置品牌与分类之间的关系,先要判断两者是否有关系,有关系,就不用再建立了,没有关系的话,就要重新建立关系
         CategoryBrand categoryBrand = new CategoryBrand();
         categoryBrand.setBrandId(spu.getBrandId());
         categoryBrand.setCategoryId(spu.getCategory3Id());
+        // 调用mapper里面的方法,查看两者是否存在关系,
+        // 这个方法是说根据实体中的实例作为参数,来查询总数,
         int count = categoryBrandMapper.selectCount(categoryBrand);
-        if (count == 0){
-            //品牌与分类还没有关联关系
+        // 判断是否存在关系
+        if(count==0){
+            // 就是说分类和品牌之间还没有关系,那就建立关系,insert()是说保存一个实体,包括Null,不使用数据库默认值
             categoryBrandMapper.insert(categoryBrand);
         }
-
-        //获取sku集合
+        // 获取到sku的集合
         List<Sku> skuList = goods.getSkuList();
-
-        if (skuList == null || skuList.size() <= 0) {
+        // 判断是否为空,如果为空的话,就抛出异常
+        if(skuList==null && skuList.size()<=0){
             ExceptionCast.cast(GoodsCode.GOODS_SPU_ADD_SPEC_ERROR);
         }
-
-        // 只有一个spu的话,sku也是spu
-        if (skuList != null && skuList.size() > 0) {
-            //遍历sku集合,循环填充数据并添加到数据库中
-            for (Sku sku : skuList) {
-                //设置skuId
-                sku.setId(String.valueOf(idWorker.nextId()));
-
-                //设置sku规格数据,如果为空的话,就设置成空字符串
-                if (StringUtils.isEmpty(sku.getSpec())) {
-                    sku.setSpec("{}");
-                }
-                //设置sku名称(spu名称+规格)
-                String name = spu.getName();
-
-                //将规格json转换为map,将map中的value进行名称的拼接
-                Map<String, String> specMap = JSON.parseObject(sku.getSpec(), Map.class);
-                if (specMap != null && specMap.size() > 0) {
-                    for (String value : specMap.values()) {
-                        name += " " + value;
-                    }
-                }
-                sku.setName(name);
-                //设置spuid
-                sku.setSpuId(spu.getId());
-                //设置创建与修改时间
-                sku.setCreateTime(new Date());
-                sku.setUpdateTime(new Date());
-                //商品分类id
-                sku.setCategoryId(category.getId());
-                //设置商品分类名称
-                sku.setCategoryName(category.getName());
-                //设置品牌名称
-                sku.setBrandName(brand.getName());
-                //将sku添加到数据库
-                skuMapper.insertSelective(sku);
-
+        // 如果不为0的话,只有一个spu的话,sku也是spu
+        for (Sku sku:skuList){
+            // 设置sku的id
+            long skuId = idWorker.nextId();
+            sku.setId(String.valueOf(skuId));
+            // 设置sku的规格数据,如果为空的话,就设置成空的字符串
+            if(StringUtils.isEmpty(sku.getSpec())){
+                sku.setSpec("{}");
             }
+            // 设置sku的名称,要分别遍历之后再进行名称的拼接, 是spu的名称加上每一个sku的名称,再写入数据库
+            String name = spu.getName();
+
+            // 将规格json转换为map,把map中的value进行名称的拼接
+            Map<String,String> specMap = JSON.parseObject(sku.getSpec(), Map.class);
+            if(specMap != null && specMap.size() >0){
+                // 如果集合不为空的话,获取到所有的value值,再进行名称的拼接
+                for (String value: specMap.values()){
+                    name += ""+value;
+                }
+            }
+            // 设置sku的名称
+            sku.setName(name);
+            // 设置spu的id值
+            sku.setSpuId(spu.getId());
+            // 设置创建与修改的时间
+            sku.setCreateTime(new Date());
+            sku.setUpdateTime(new Date());
+            // 设置商品的分类id
+            sku.setCategoryId(category.getId());
+            // 设置商品的分类名称
+            sku.setCategoryName(category.getName());
+            // 设置商品的品牌名称
+            sku.setBrandName(brand.getName());
+
+            // 将数据全部添加到sku表里去
+            skuMapper.insertSelective(sku);
         }
     }
 }
