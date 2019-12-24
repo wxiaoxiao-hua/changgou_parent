@@ -64,9 +64,31 @@ public class SpuController {
         return new Result(true,StatusCode.OK,"修改成功");
     }
 
+    /*
+    * 审核商品状态
+    * */
+    @PutMapping("/audit/{id}")
+    public Result audit(@PathVariable("id") String id){
+        spuService.audit(id);
+        return new Result(true,StatusCode.OK,"商品审核成功");
+    }
+
+    // 商品的下架
+    @PutMapping("/pull/{id}")
+    public Result pull(@PathVariable("id")String id){
+        spuService.pull(id);
+        return new Result(true,StatusCode.OK,"商品下架成功");
+    }
+
+    // 商品的上架
+    @PutMapping("/put/{id}")
+    public Result put(@PathVariable("id")String id){
+        spuService.put(id);
+        return new Result(true,StatusCode.OK,"商品上架成功");
+    }
 
     /***
-     * 根据ID删除品牌数据
+     * 根据ID逻辑删除品牌数据,存放于回收站
      * @param id
      * @return
      */
@@ -75,6 +97,21 @@ public class SpuController {
         spuService.delete(id);
         return new Result(true,StatusCode.OK,"删除成功");
     }
+
+    // 从回收站进行数据恢复
+    @PutMapping("/restore/{id}")
+    public Result restore(@PathVariable("id") String id){
+        spuService.restore(id);
+        return new Result(true,StatusCode.OK,"商品还原成功");
+    }
+
+    //商品进行物理删除,彻底从数据库里面进行删除
+    @DeleteMapping("/realDel/{id}")
+    public Result realDel(@PathVariable("id") String id){
+        spuService.realDelete(id);
+        return new Result(true,StatusCode.OK,"商品删除成功");
+    }
+
 
     /***
      * 多条件搜索品牌数据

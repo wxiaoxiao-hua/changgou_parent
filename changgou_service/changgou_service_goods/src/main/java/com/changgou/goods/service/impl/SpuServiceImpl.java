@@ -65,7 +65,6 @@ public class SpuServiceImpl implements SpuService {
      * 增加
      * @param spu
      */
-    @Override
     public void add(Spu spu){
         spuMapper.insert(spu);
     }
@@ -75,18 +74,9 @@ public class SpuServiceImpl implements SpuService {
      * 修改
      * @param spu
      */
-    @Override
+
     public void update(Spu spu){
         spuMapper.updateByPrimaryKey(spu);
-    }
-
-    /**
-     * 删除
-     * @param id
-     */
-    @Override
-    public void delete(String id){
-        spuMapper.deleteByPrimaryKey(id);
     }
 
 
@@ -352,6 +342,111 @@ public class SpuServiceImpl implements SpuService {
         this.saveSkuList(goods);
     }
 
+    // 商品的审核
+    @Override
+    public void audit(String id) {
+        // 根据id,查询对应的商品信息
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        // 判断这个商品是否存在
+        if(spu==null){
+            ExceptionCast.cast(GoodsCode.GOODS_NOT_FOUND);
+        }
+        // 如果商品存在的话,判断它的删除状态,如果没有被删除的话,把审核状态改成 1,已经审核,并且自动上架
+        if("1".equals(spu.getIsDelete())){
+            ExceptionCast.cast(GoodsCode.GOODS_IS_DELETE);
+        }
+        // 商品存在,也不处于删除状态的话,就自动审核,并且自动上架
+        spu.setStatus("1");
+        spu.setIsMarketable("1");
+        // 再执行修改操作
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
 
+    // 商品的下架
+    public void pull(String id){
+        // 根据id获取到商品信息
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        // 判断这个商品是否存在
+        if(spu==null){
+            ExceptionCast.cast(GoodsCode.GOODS_NOT_FOUND);
+        }
+        // 判断商品是否已经被删除
+        if("1".equals(spu.getIsDelete())){
+            ExceptionCast.cast(GoodsCode.GOODS_IS_DELETE);
+        }
+        // 没有被删除的话,直接下架,并修改回数据库
+        spu.setIsMarketable("0");
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    // 商品的上架
+    @Override
+    public void put(String id){
+        // 根据id获取到商品信息
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        // 判断这个商品是否存在
+        if(spu==null){
+            ExceptionCast.cast(GoodsCode.GOODS_NOT_FOUND);
+        }
+        // 判断商品是否已经被删除
+        if("1".equals(spu.getIsDelete())){
+            ExceptionCast.cast(GoodsCode.GOODS_IS_DELETE);
+        }
+        // 没有被删除的话,再判断一下,是否已经审核
+        if(!spu.getStatus().equals("1")){
+            ExceptionCast.cast(GoodsCode.GOODS_PUT_AUDIT_ERROR);
+        }
+        spu.setIsMarketable("1");
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    // 逻辑删除商品的信息
+    @Override
+    public void delete(String id){
+        // 根据id,查询到对应的spu信息
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        // 判断商品是否存在
+        if(spu==null){
+            ExceptionCast.cast(GoodsCode.GOODS_NOT_FOUND);
+        }
+        // 存在的话,判断商品是否处于下架状态
+        if(!spu.getIsMarketable().equals("0")){
+            ExceptionCast.cast(GoodsCode.GOODS_DELETE_PULL_ERROR);
+        }
+        // 当处于下架状态的时候,将删除状态改成已删除状态,审核状态改成未审核状态
+        spu.setIsDelete("1");
+        spu.setIsMarketable("0");
+        // 再在数据库里面进行更新
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    // 将数据从回收站恢复
+    @Override
+    public void restore(String id) {
+        // 根据id查询到spu
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        // 判断当前商品是否处于删除状态
+        if (!"1".equals(spu.getIsDelete())){
+            ExceptionCast.cast(GoodsCode.GOODS_DELETE_RESTORE_ERROR);
+        }
+        // 处于删除状态的时候,才能进行恢复
+        spu.setIsDelete("0");
+        // 从回收站拿出来之后,将审核状态改成为 未审核
+        spu.setStatus("0");
+        // 更新回数据库
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    // 商品真正的物理删除
+    @Override
+    public void realDelete(String id) {
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        // 判断是否已经处于删除状态
+        if(!spu.getIsDelete().equals("1")){
+            ExceptionCast.cast(GoodsCode.GOODS_REALDELETE_ERROR);
+        }
+        // 进行删除
+        spuMapper.deleteByPrimaryKey(spu);
+    }
 
 }

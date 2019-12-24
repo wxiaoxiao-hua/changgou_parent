@@ -23,24 +23,6 @@ public interface SpuService {
     Spu findById(String id);
 
     /***
-     * 新增
-     * @param spu
-     */
-    void add(Spu spu);
-
-    /***
-     * 修改
-     * @param spu
-     */
-    void update(Spu spu);
-
-    /***
-     * 删除
-     * @param id
-     */
-    void delete(String id);
-
-    /***
      * 多条件搜索
      * @param searchMap
      * @return
@@ -73,4 +55,22 @@ public interface SpuService {
 
     // 修改商品的信息
     void update(Goods goods);
+
+    // 商品的审核
+    void audit(String id);
+
+    // 商品的下架
+    void pull(String id);
+
+    // 商品的上架
+    void put(String id);
+
+    // 逻辑删除商品的信息
+    void delete(String id);
+
+    // 商品从回收站恢复
+    void restore(String id);
+
+    // 商品的物理删除,直接从数据库里面进行删除
+    void realDelete(String id);
 }
