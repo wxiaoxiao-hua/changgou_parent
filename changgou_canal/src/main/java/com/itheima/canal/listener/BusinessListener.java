@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * @author ZJ
  */
-@CanalEventListener
+@CanalEventListener  // 这个是申明当前是canal的监听类
 public class BusinessListener {
 
     @Autowired
