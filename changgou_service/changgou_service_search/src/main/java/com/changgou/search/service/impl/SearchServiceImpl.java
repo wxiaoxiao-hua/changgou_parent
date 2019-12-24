@@ -1,22 +1,40 @@
 package com.changgou.search.service.impl;
 
 
+import com.alibaba.fastjson.JSON;
+import com.changgou.search.pojo.SkuInfo;
 import com.changgou.search.service.SearchService;
 import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.SearchResultMapper;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -28,7 +46,7 @@ public class SearchServiceImpl implements SearchService {
 
     // 条件查询以及分页
     @Override
-    public Map search(Map<String, String> searchMap) throws Exception {
+    public Map search(Map<String, String> searchMap) {
         // 创建返回值的对象
         Map<String,Object> resultMap = new HashMap<>();
         /*
@@ -109,11 +127,86 @@ public class SearchServiceImpl implements SearchService {
             // 设置分页,第一个参数: 当前页,是从0开始的, 第二个参数: 每页显示多少条
             nativeSearchQueryBuilder.withPageable(PageRequest.of(Integer.parseInt(pageNum),Integer.parseInt(pageSize)));
 
-            //
+            // 按照相关的字段,进行排序,两种情况,可能升序,也可能降序
+            if(StringUtils.isNotEmpty(searchMap.get("sortField"))&& StringUtils.isNotEmpty(searchMap.get("sortRule"))){
+                // 如果不为空的话, 再进行升降序的排列
+                if("ASC".equals(searchMap.get("sortRule"))){
+                    // 这种是升序排列
+                    nativeSearchQueryBuilder.withSort(SortBuilders.fieldSort(searchMap.get("sortField")).order(SortOrder.ASC));
+                }else{
+                    // 这种是降序排列
+                    nativeSearchQueryBuilder.withSort(SortBuilders.fieldSort(searchMap.get("sortField")).order(SortOrder.DESC));
+                }
+            }
 
+            // 拼接完了排序之后,设置高亮域以及高亮的样式
+            HighlightBuilder.Field field = new HighlightBuilder.Field("name") //高亮的区域
+                    // 设置高亮样式的前缀
+                    .preTags("<span style='color:red'>")
+                    // 设置高亮样式的后缀
+                    .postTags("</span>");
+            // 再拼接到条件查询器
+            nativeSearchQueryBuilder.withHighlightFields(field);
 
+            /* 开始使用模板进行查询
+            *   1.第一个参数是: 条件查询器对象
+            *   2.查询操作的实体类对象
+            *   3. 查询结果的操作对象
+            * */
+            AggregatedPage<SkuInfo> resultInfo = elasticsearchTemplate.queryForPage(nativeSearchQueryBuilder.build(), SkuInfo.class, new SearchResultMapper() {
+                @Override
+                public <T> AggregatedPage<T> mapResults(SearchResponse searchResponse, Class<T> aClass, Pageable pageable) {
+                    // 查询结果的操作
+                    List<T> list = new ArrayList<>();
+                    // 获取查询命中的结果数据
+                    SearchHits hits = searchResponse.getHits();
+                    if (hits != null) {
+                        // 有查询结果的时候
+                        for (SearchHit hit : hits) {
+                            SkuInfo skuInfo = JSON.parseObject(hit.getSourceAsString(), SkuInfo.class);
+
+                            Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+                            if (highlightFields != null && highlightFields.size() > 0) {
+                                // 替换掉数据
+                                skuInfo.setName(highlightFields.get("name").getFragments()[0].toString());
+                            }
+                            list.add((T) skuInfo);
+                        }
+                    }
+                    return new AggregatedPageImpl<T>(list, pageable, hits.getTotalHits(), searchResponse.getAggregations());
+                }
+            });
+
+            /**
+             *  封装返回的对象
+             *  1, 总记录数,总页数,查询到的数据的集合
+             *  2, 对应的品牌的分组结果
+             *  3, 对应的规格的分组结果
+             *  4, 当前页码
+             */
+            // 总记录数
+            resultMap.put("total",resultInfo.getTotalElements());
+            // 总页数
+            resultMap.put("totalPages",resultInfo.getTotalPages());
+            // 查询到的数据集合
+            resultMap.put("rows",resultInfo.getContent());
+
+            // 封装品牌的分组结果
+            StringTerms brandTerms = (StringTerms) resultInfo.getAggregation(skuBrand);
+            List<String> brandList = brandTerms.getBuckets().stream().map(bucket -> bucket.getKeyAsString()).collect(Collectors.toList());
+            resultMap.put("brandList",brandList);
+
+            // 封装规格的分组结果
+            StringTerms specTerms = (StringTerms) resultInfo.getAggregation(skuSpec);
+            List<String> specList = brandTerms.getBuckets().stream().map(bucket -> bucket.getKeyAsString()).collect(Collectors.toList());
+            resultMap.put("specList",specList);
+
+            // 封装当前页
+            resultMap.put("pageNum",pageNum);
+
+            return resultMap;
 
         }
-        return resultMap;
+        return null;
     }
 }
