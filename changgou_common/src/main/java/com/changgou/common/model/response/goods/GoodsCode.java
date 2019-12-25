@@ -14,6 +14,8 @@ public enum GoodsCode implements ResultCode {
     GOODS_DELETE_PULL_ERROR(false,22006 ,"当前商品必须处于下架状态才能删除" ),
     GOODS_DELETE_RESTORE_ERROR(false,22007,"当前商品必须处于删除状态才能恢复" ),
     GOODS_REALDELETE_ERROR(false,22008,"当前商品必须处于删除状态才能从回收站彻底删除" ),
+    GOODS_IMPORT_ERROR(false,22009,"当前没有数据被查询到,无法导入索引库" ),
+    GOODS_IMPORT_DELETE_ERROR(false,22010,"当前没有数据被查询到,无法删除索引库数据" ),
     GOODS_NOT_FOUND(false,22003,"当前商品不存在");
 
     //操作是否成功

@@ -1,4 +1,5 @@
 package com.changgou.goods.controller;
+
 import com.changgou.common.entity.PageResult;
 import com.changgou.common.entity.Result;
 import com.changgou.common.entity.StatusCode;
@@ -7,6 +8,8 @@ import com.changgou.goods.pojo.Sku;
 import com.github.pagehelper.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 @RestController
@@ -103,5 +106,24 @@ public class SkuController {
         return new Result(true,StatusCode.OK,"查询成功",pageResult);
     }
 
+
+    // 根据sku的id查询对应的sku的列表
+    @GetMapping("/spu/{spuId}/{page}")
+    public PageResult<Sku> findSkuPageBySpuId(@PathVariable("spuId")String spuId, @PathVariable("page")Integer page){
+        // 把搜索的条件封装成为一个map集合
+        Map<String,Object> searchMap = new HashMap<>();
+
+        // 对条件进行判断
+        if(!"all".equals(spuId)){
+            // 如果不是所有的spuId的话,,向集合里依次添加数据信息
+            searchMap.put("spuId",spuId);
+        }
+        searchMap.put("status","1");
+        Page<Sku> skuPage = skuService.findPage(searchMap, page, 1000);
+
+        // 在pageResult中添加一个 page总页数的字段
+        PageResult<Sku> pageResult = new PageResult(skuPage.getTotal(),skuPage.getResult(),skuPage.getPages());
+        return pageResult;
+    }
 
 }

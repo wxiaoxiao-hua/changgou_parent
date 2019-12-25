@@ -11,7 +11,6 @@ import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -58,8 +57,9 @@ public class SearchServiceImpl implements SearchService {
         if(searchMap!=null && searchMap.size()>0){
             // 参数不为空的话,就构建封装查询条件的对象
 
-            // 创建的是条件查询生成器
+            // 创建的是条件查询生成器,会将所有的查询条件封装到一起,成为一个json格式的字符串
             NativeSearchQueryBuilder nativeSearchQueryBuilder = new NativeSearchQueryBuilder();
+            // 创建的是布尔查询的对象,格式类似于是
             BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
 
             // 获取关键字,并且拼接到参数上去
@@ -104,7 +104,7 @@ public class SearchServiceImpl implements SearchService {
             nativeSearchQueryBuilder.withQuery(boolQuery);
 
 
-            // 按照品牌再进行分组查询
+            // 按照品牌再进行分组查询,  对前面的结果进行聚合,按照品牌进行分组
             String skuBrand = "skuBrand";
             // 这里的意思是添加一个聚合(归类),聚合的类型是terms,聚合的名称是skuBrand的值,聚合的字段是brandName
             // 按照brandName来进行归类分组
