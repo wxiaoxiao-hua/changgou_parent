@@ -59,13 +59,14 @@ public class SearchServiceImpl implements SearchService {
 
             // 创建的是条件查询生成器,会将所有的查询条件封装到一起,成为一个json格式的字符串
             NativeSearchQueryBuilder nativeSearchQueryBuilder = new NativeSearchQueryBuilder();
-            // 创建的是布尔查询的对象,格式类似于是
+            // 创建的是布尔查询的对象,要用布尔查询的对象将条件串联起来
             BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
 
             // 获取关键字,并且拼接到参数上去
             if(StringUtils.isNotEmpty(searchMap.get("keywords"))){
                 // must是说分词
                 // matchQuery: 会将搜索的词进行分词,再与目标查询字段进行匹配, 后面的and表示的是并且的意思
+                // operator : 是指切分的意思
                 boolQuery.must(QueryBuilders.matchQuery("name",searchMap.get("keywords")).operator(Operator.AND));
             }
 
