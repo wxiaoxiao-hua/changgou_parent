@@ -2,6 +2,7 @@ package com.changgou.search.service.impl;
 
 
 import com.alibaba.fastjson.JSON;
+import com.changgou.goods.pojo.Spec;
 import com.changgou.search.pojo.SkuInfo;
 import com.changgou.search.service.SearchService;
 import org.apache.commons.lang.StringUtils;
@@ -29,10 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -199,8 +197,8 @@ public class SearchServiceImpl implements SearchService {
 
             // 封装规格的分组结果
             StringTerms specTerms = (StringTerms) resultInfo.getAggregation(skuSpec);
-            List<String> specList = brandTerms.getBuckets().stream().map(bucket -> bucket.getKeyAsString()).collect(Collectors.toList());
-            resultMap.put("specList",specList);
+            List<String> specList = specTerms.getBuckets().stream().map(bucket -> bucket.getKeyAsString()).collect(Collectors.toList());
+            resultMap.put("specList",this.formartSpec(specList));
 
             // 封装当前页
             resultMap.put("pageNum",pageNum);
@@ -209,5 +207,57 @@ public class SearchServiceImpl implements SearchService {
 
         }
         return null;
+    }
+
+    /**
+     * 原有数据
+     *  [
+     *         "{'颜色': '黑色', '尺码': '平光防蓝光-无度数电脑手机护目镜'}",
+     *         "{'颜色': '红色', '尺码': '150度'}",
+     *         "{'颜色': '黑色', '尺码': '150度'}",
+     *         "{'颜色': '黑色'}",
+     *         "{'颜色': '红色', '尺码': '100度'}",
+     *         "{'颜色': '红色', '尺码': '250度'}",
+     *         "{'颜色': '红色', '尺码': '350度'}",
+     *         "{'颜色': '黑色', '尺码': '200度'}",
+     *         "{'颜色': '黑色', '尺码': '250度'}"
+     *     ]
+     *
+     *    需要的数据格式
+     *    {
+     *        颜色:[黑色,红色],
+     *        尺码:[100度,150度]
+     *    }
+     */
+    // 将这些数据改成页面显示需要的格式:
+    // 颜色: 黑色,红色
+    // 尺码: 100度,200度
+
+    public Map<String,Set<String>> formartSpec(List<String> specList){
+        // 创建封装结果的集合
+        Map<String,Set<String>> resultMap = new HashMap<>();
+        // 判断参数是否存在,不为0
+        if(specList!=null && specList.size()>0){
+            // 遍历这个结合,获取到集合里面的每一个元素,是一个长的字符串
+            for (String specJsonString:specList){
+                // 拿到集合里面的每一个长的字符串元素,将其转换成map集合的格式
+                Map<String,String> specMap = JSON.parseObject(specJsonString, Map.class);
+                // 遍历集合,拿到里面的每一个键的信息
+                for (String specKey:specMap.keySet()){
+                    // 根据键的信息,获取resultMap集合里面相同键对应的值的信息(这里面肯定是没有信息的)
+                    Set<String> specSet = resultMap.get(specKey);
+                    // 再进行判断
+                    if(specSet == null){
+                        // 创建新的集合
+                        specSet = new HashSet<>();
+                    }
+                    // 将对应的规格的信息封装到集合里
+                    specSet.add(specMap.get(specKey));
+                    // 再将set放入到resultMap集合里
+                    resultMap.put(specKey,specSet);
+                }
+            }
+        }
+        return resultMap;
     }
 }

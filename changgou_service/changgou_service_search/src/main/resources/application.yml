@@ -1,6 +1,9 @@
 server:
   port: 9009
 spring:
+  # 配置的是thymeleaf 不缓存
+  thymeleaf:
+    cache: false
   application:
     name: search
   rabbitmq:
