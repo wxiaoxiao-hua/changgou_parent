@@ -511,7 +511,10 @@
 					</div>
 				</div>
                 <!-- 规格信息 -->
-				<div class="type-wrap" th:each="spec,specStat:${result.specList}" th:unless="${#maps.containsKey(searchMap,'spec_'+spec.key)}">
+				<div class="type-wrap"
+                     th:each="spec,specStat:${result.specList}"
+                     th:unless="${#maps.containsKey(searchMap,'spec_'+spec.key)}">
+
 					<div class="fl key" th:text="${spec.key}"></div>
 					<div class="fl value">
 						<ul class="type-list">
@@ -532,9 +535,6 @@
                             </li>
                             <li>
                                 <a th:text="500-1000元"></a>
-                            </li>
-                            <li>
-                                <a th:text="0-500元"></a>
                             </li>
                             <li>
                                 <a th:text="1000-1500元"></a>
