@@ -166,7 +166,8 @@ public class SearchServiceImpl implements SearchService {
 
                             Map<String, HighlightField> highlightFields = hit.getHighlightFields();
                             if (highlightFields != null && highlightFields.size() > 0) {
-                                // 替换掉数据
+                                // 替换掉数据,拼接的时候,建议使用循环,这里直接选择0索引上的,是因为只有一个.
+                                // 循环遍历之前,先进行一次长度的判断
                                 skuInfo.setName(highlightFields.get("name").getFragments()[0].toString());
                             }
                             list.add((T) skuInfo);

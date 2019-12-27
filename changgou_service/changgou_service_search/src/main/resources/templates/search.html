@@ -50,13 +50,15 @@
 					<div class="yui3-u Left logoArea">
 						<a class="logo-bd" title="畅购" href="index.html" target="_blank"></a>
 					</div>
+                    <!-- 搜索框 -->
 					<div class="yui3-u Rit searchArea">
 						<div class="search">
-							<form action="" class="sui-form form-inline">
+                            <!-- 搜索框一提交,走的是这个action 路径 -->
+							<form class="sui-form form-inline" th:action="@{/search/list}">
 								<!--searchAutoComplete-->
 								<div class="input-append">
-									<input type="text" id="autocomplete"   class="input-error input-xxlarge" />
-									<button class="sui-btn btn-xlarge btn-danger" type="button">搜索</button>
+									<input th:type="text" id="autocomplete"   name="keywords" th:value="${searchMap.keywords}" class="input-error input-xxlarge" />
+									<button class="sui-btn btn-xlarge btn-danger" th:type="submit">搜索</button>
 								</div>
 							</form>
 						</div>
@@ -473,17 +475,21 @@
 				<ul class="fl sui-tag">
 					<li class="with-x" th:if="${#maps.containsKey(searchMap,'brand')}">
                         品牌:<span th:text="${searchMap.brand}"></span>
-                        <i>×</i>
+                        <!-- 这里添加超链接的意思就是说,当点击这个×的时候,将路径里面的brand=华为  替换成空的字符串 -->
+                        <a th:href="@{${#strings.replace(url,'&brand='+searchMap.brand,'')}}">×</a>
                     </li>
+
                     <li class="with-x" th:if="${#maps.containsKey(searchMap,'price')}">
                         价格:<span th:text="${searchMap.price}"></span>
-                        <i>×</i>
+                        <!-- 这里添加超链接的意思就是说,当点击这个×的时候,将路径里面的price=0-500  替换成空的字符串 -->
+                        <a th:href="@{${#strings.replace(url,'&price='+searchMap.price,'')}}">×</a>
                     </li>
-                    <!--  现在判断的是规格,规格是一个集合,要用循环 -->
+
+                    <!--  现在主要判断的是规格,规格是一个集合,要用循环 -->
                     <li class="with-x" th:each="spec:${searchMap}" th:if="${#strings.startsWith(spec.key,'spec_')}">
                         <span th:text="${#strings.replace(spec.key,'spec_','')}"></span>:
                         <span th:text="${#strings.replace(spec.value,'%2B','+')}"></span>
-                        <i>×</i>
+                        <a th:href="@{${#strings.replace(url,'&'+spec.key+'='+spec.value,'')}}">×</a>
                     </li>
 				</ul>
 
@@ -496,12 +502,14 @@
 			</div>
 			<!--selector-->
 			<div class="clearfix selector">
+                <!-- 品牌信息 -->
 				<div class="type-wrap logo" th:unless="${#maps.containsKey(searchMap,'brand')}">
 					<div class="fl key brand">品牌</div>
 					<div class="value logos">
 						<ul class="logo-list" >
 							<li th:each="brand,brandStat:${result.brandList}">
-                                <a th:text="${brand}"></a>
+                                <!-- 如果选择了这些条件,就要在url路径上,将这些条件拼接上去-->
+                                <a th:text="${brand}" th:href="@{${url}(brand=${brand})}"></a>
                             </li>
 						</ul>
 					</div>
@@ -519,7 +527,7 @@
 					<div class="fl value">
 						<ul class="type-list">
 							<li th:each="opstion,opstionStat:${spec.value}">
-								<a th:text="${opstion}"></a>
+								<a th:text="${opstion}" th:href="@{${url}('spec_'+${spec.key}=${opstion})}"></a>
 							</li>
 						</ul>
 					</div>
@@ -531,22 +539,22 @@
                     <div class="fl value">
                         <ul class="type-list">
                             <li>
-                              <a th:text="0-500元"></a>
+                              <a th:text="0-500元" th:href="@{${url}(price='0-500')}"></a>
                             </li>
                             <li>
-                                <a th:text="500-1000元"></a>
+                                <a th:text="500-1000元" th:href="@{${url}(price='500-1000')}"></a>
                             </li>
                             <li>
-                                <a th:text="1000-1500元"></a>
+                                <a th:text="1000-1500元" th:href="@{${url}(price='1000-1500')}"></a>
                             </li>
                             <li>
-                                <a th:text="1500-2000元"></a>
+                                <a th:text="1500-2000元" th:href="@{${url}(price='1500-2000')}"></a>
                             </li>
                             <li>
-                                <a th:text="2000-3000元"></a>
+                                <a th:text="2000-3000元" th:href="@{${url}(price='2000-3000')}"></a>
                             </li>
                             <li>
-                                <a th:text="3000元以上"></a>
+                                <a th:text="3000元以上" th:href="@{${url}(price='3000')}"></a>
                             </li>
                         </ul>
                     </div>
@@ -571,8 +579,13 @@
 								<a href="#">评价</a>
 							</li>
 							<li>
-								<a href="#">价格</a>
+                                <!-- 跳转的路径,拼接规格参数.升序 -->
+								<a th:href="@{${url}(sortRule='ASC',sortField='price')}">价格↑</a>
 							</li>
+                            <li>
+                                <!-- 跳转的路径,拼接规格参数.降序 -->
+                                <a th:href="@{${url}(sortRule='DESC',sortField='price')}">价格↓</a>
+                            </li>
 						</ul>
 					</div>
 				</div>
@@ -603,28 +616,18 @@
 						</li>
 					</ul>
 				</div>
+
+                <!-- 分页 -->
 				<div class="fr page">
 					<div class="sui-pagination pagination-large">
 						<ul>
 							<li class="prev disabled">
-								<a href="#">«上一页</a>
+                                <!-- 点击上一页的时候,根据页码跳转路径 -->
+								<a th:href="@{${url}(pageNum=${page.upper})}">«上一页</a>
 							</li>
-							<li class="active">
-								<a href="#">1</a>
+							<li th:each="i:${#numbers.sequence(page.lpage,page.rpage)}" >
+								<a href="#"></a>
 							</li>
-							<li>
-								<a href="#">2</a>
-							</li>
-							<li>
-								<a href="#">3</a>
-							</li>
-							<li>
-								<a href="#">4</a>
-							</li>
-							<li>
-								<a href="#">5</a>
-							</li>
-							<li class="dotted"><span>...</span></li>
 							<li class="next">
 								<a href="#">下一页»</a>
 							</li>
