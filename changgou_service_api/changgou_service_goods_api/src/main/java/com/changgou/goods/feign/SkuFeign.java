@@ -11,7 +11,11 @@ import java.util.List;
 
 @FeignClient(name = "goods")
 public interface SkuFeign {
+
     // 根据多条件查询品牌的数据
     @GetMapping("/sku/spu/{spuId}/{page}")
     public PageResult<Sku> findSkuPageBySpuId(@PathVariable("spuId")String spuId, @PathVariable("page")Integer page);
+
+    @GetMapping("/sku/spu/{spuId}")
+    public List<Sku> findSkuListBySpuId(@PathVariable("spuId")String spuId);
 }

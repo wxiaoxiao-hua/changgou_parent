@@ -13,6 +13,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>changgou_gateway_system</module>
+        <module>changgou_gateway_web</module>
     </modules>
 
     <!-- 添加网关的依赖 -->
@@ -33,6 +34,9 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
         </dependency>
+
+
+
     </dependencies>
 
 </project>

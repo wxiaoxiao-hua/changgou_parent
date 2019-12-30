@@ -621,21 +621,35 @@
 				<div class="fr page">
 					<div class="sui-pagination pagination-large">
 						<ul>
-							<li class="prev disabled">
+                            <!-- 如果当前页面已经是第一页的时候,这个按钮要设置成为不可点击的 -->
+							<li th:class="${page.currentpage<=1}?'prev disabled':'prev'">
                                 <!-- 点击上一页的时候,根据页码跳转路径 -->
 								<a th:href="@{${url}(pageNum=${page.upper})}">«上一页</a>
 							</li>
-							<li th:each="i:${#numbers.sequence(page.lpage,page.rpage)}" >
-								<a href="#"></a>
+                            <!-- 这里的${#numbers.sequence(page.lpage,page.rpage)} 是说生成一个从 lpage到rpage的数组
+                                 active的话,按钮显示的跟其它的按钮不一样
+                            -->
+							<li th:each="i:${#numbers.sequence(page.lpage,page.rpage)}" th:class="${i}==${page.currentpage}?'active':''">
+								<a th:href="@{${url}(pageNum=${i})}" th:text="${i}"></a>
 							</li>
-							<li class="next">
-								<a href="#">下一页»</a>
+							<li th:class="${page.currentpage>=page.last}?'next disabled':'next'">
+                                <a th:if="${page.currentpage<page.last}" th:href="@{${url}(pageNum=${page.next})}">下一页»</a>
+								<a th:unless="${page.currentpage<page.last}" href="javascript:void(0)">下一页»</a>
 							</li>
+
+                                <span>共<i th:text="${page.last}"></i>页&nbsp;</span>
+                                <!--<span>到第<input type="text" id="autocomplete" name="pagenum" th:value="${page.currentpage}" class="page-num">页
+                                    <a th:href="@{${url}(pageNum=${page.currentpage})}"><button class="page-confirm">确定</button></a>
+                                </span>-->
+
 						</ul>
-						<div><span>共10页&nbsp;</span><span>
-      到第
-      <input type="text" class="page-num">
-      页 <button class="page-confirm" onclick="alert(1)">确定</button></span></div>
+
+                       <!-- <div class="input-append">
+                            <span>共<i th:text="${page.last}"></i>页&nbsp;</span>
+                            <span>到第<input type="text" id="autocomplete" name="pagenum" th:value="${page.currentpage}" class="page-num">页
+                                <a th:href="@{${url}(pageNum=${page.currentpage})}"><button class="page-confirm">确定</button></a>
+                            </span>
+                        </div>-->
 					</div>
 				</div>
 			</div>
