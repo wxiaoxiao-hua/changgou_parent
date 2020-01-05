@@ -159,4 +159,14 @@ public class AddressServiceImpl implements AddressService {
         return example;
     }
 
+
+    // 根据用户名,查询对应的地址列表
+    @Override
+    public List<Address> list(String username) {
+        Address address = new Address();
+        address.setUsername(username);
+        List<Address> addressList = addressMapper.select(address);
+        return addressList;
+    }
+
 }

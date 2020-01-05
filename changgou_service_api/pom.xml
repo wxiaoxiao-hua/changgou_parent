@@ -21,6 +21,7 @@
         <module>changgou_service_file_api</module>
         <module>changgou_service_file_api</module>
         <module>changgou_service_search_api</module>
+        <module>changgou_service_pay_api</module>
     </modules>
 
     <dependencies>
