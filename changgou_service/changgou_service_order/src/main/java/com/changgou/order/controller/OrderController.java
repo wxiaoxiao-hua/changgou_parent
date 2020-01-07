@@ -2,6 +2,7 @@ package com.changgou.order.controller;
 import com.changgou.common.entity.PageResult;
 import com.changgou.common.entity.Result;
 import com.changgou.common.entity.StatusCode;
+import com.changgou.order.config.TokenDecode;
 import com.changgou.order.service.OrderService;
 import com.changgou.order.pojo.Order;
 import com.github.pagehelper.Page;
@@ -17,6 +18,8 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+    @Autowired
+    private TokenDecode tokenDecode;
 
     /**
      * 查询全部数据
@@ -38,19 +41,6 @@ public class OrderController {
         Order order = orderService.findById(id);
         return new Result(true,StatusCode.OK,"查询成功",order);
     }
-
-
-    /***
-     * 新增数据
-     * @param order
-     * @return
-     */
-    @PostMapping
-    public Result add(@RequestBody Order order){
-        orderService.add(order);
-        return new Result(true,StatusCode.OK,"添加成功");
-    }
-
 
     /***
      * 修改数据
@@ -101,6 +91,22 @@ public class OrderController {
         Page<Order> pageList = orderService.findPage(searchMap, page, size);
         PageResult pageResult=new PageResult(pageList.getTotal(),pageList.getResult());
         return new Result(true,StatusCode.OK,"查询成功",pageResult);
+    }
+
+
+    /***
+     * 新增数据
+     * @param order
+     * @return
+     */
+    @PostMapping
+    public Result add(@RequestBody Order order){
+        // 从令牌里面获取到用户的名称
+        String username = tokenDecode.getUserInfo().get("username");
+        // 设置购买的用户
+        order.setUsername(username);
+        String orderId = orderService.add(order);
+        return new Result(true,StatusCode.OK,"添加成功",orderId);
     }
 
 

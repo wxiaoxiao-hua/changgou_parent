@@ -1,16 +1,19 @@
 package com.changgou.web.order.controller;
 
+import com.changgou.common.entity.Result;
 import com.changgou.order.feign.CartFeign;
+import com.changgou.order.feign.OrderFeign;
+import com.changgou.order.pojo.Order;
 import com.changgou.order.pojo.OrderItem;
 import com.changgou.user.feign.AddressFeign;
 import com.changgou.user.pojo.Address;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
-import java.awt.*;
+
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -22,11 +25,13 @@ public class OrderController {
     private AddressFeign addressFeign;
     @Autowired
     private CartFeign cartFeign;
+    @Autowired
+    private OrderFeign orderFeign;
 
     @RequestMapping("/ready/order")
     public String readyOrder(Model model){
         // 收件人的地址信息
-        List<Address> addressList = addressFeign.list().getData();
+        List<Address> addressList = (List<Address>) addressFeign.list().getData();
         model.addAttribute("adress",addressList);
 
         // 购物车的信息
@@ -48,6 +53,13 @@ public class OrderController {
             }
         }
         return "order";
+    }
+
+    @PostMapping("/add")
+    @ResponseBody
+    public Result add(@RequestBody Order order){
+       Result result  = (Result) orderFeign.add(order);
+       return result;
     }
 
 }

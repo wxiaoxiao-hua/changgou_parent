@@ -17,7 +17,7 @@ import java.util.Map;
 
 @Service
 public class CartServiceImpl implements CartService {
-    private static final String CART="Cart_";
+    private static final String CART="cart_";
 
     @Autowired
     private RedisTemplate redisTemplate;

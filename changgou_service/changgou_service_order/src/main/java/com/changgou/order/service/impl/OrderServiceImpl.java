@@ -1,14 +1,28 @@
 package com.changgou.order.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fescar.spring.annotation.GlobalTransactional;
+import com.changgou.common.util.IdWorker;
+import com.changgou.goods.feign.SkuFeign;
+import com.changgou.order.config.RabbitMQConfig;
+import com.changgou.order.dao.OrderItemMapper;
 import com.changgou.order.dao.OrderMapper;
+import com.changgou.order.dao.TaskMapper;
+import com.changgou.order.pojo.OrderItem;
+import com.changgou.order.pojo.Task;
+import com.changgou.order.service.CartService;
 import com.changgou.order.service.OrderService;
 import com.changgou.order.pojo.Order;
+import com.changgou.user.feign.UserFeign;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +31,21 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderMapper orderMapper;
+    @Autowired
+    private CartService cartService;
+    @Autowired
+    private IdWorker idWorker;
+    @Autowired
+    private OrderItemMapper orderItemMapper;
+    @Autowired
+    private SkuFeign skuFeign;
+    @Autowired
+    private RedisTemplate redisTemplate;
+    @Autowired
+    private TaskMapper taskMapper;
+    @Autowired
+    private UserFeign userFeign;
+
 
     /**
      * 查询全部列表
@@ -35,16 +64,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order findById(String id){
         return  orderMapper.selectByPrimaryKey(id);
-    }
-
-
-    /**
-     * 增加
-     * @param order
-     */
-    @Override
-    public void add(Order order){
-        orderMapper.insert(order);
     }
 
 
@@ -203,4 +222,69 @@ public class OrderServiceImpl implements OrderService {
         return example;
     }
 
+
+
+    /**
+     * 增加订单
+     * @param order
+     */
+    @Override
+    @GlobalTransactional(name = "order_add")
+    public String add(Order order){
+        // 1. 获取所有的购物项
+        Map cartMap = cartService.list(order.getUsername());
+        List<OrderItem> orderItemList = (List<OrderItem>) cartMap.get("orderItemList");
+
+        // 2. 统计计算: 这个订单的总金额,总数量
+        order.setTotalNum((Integer) cartMap.get("totalNum"));
+        order.setTotalMoney((Integer) cartMap.get("totalMoney"));
+        order.setPayMoney((Integer) cartMap.get("totalMoney"));
+        // 3. 填充订单数据并且保存
+        order.setCreateTime(new Date());
+        order.setUpdateTime(new Date());
+        order.setBuyerRate("0");  // O: 未评价   1: 已评价
+        order.setSourceType("1"); // 1: 是指web 页面支付
+        order.setOrderStatus("0"); // 0: 未完成, 1: 已完成, 2: 已退货
+        order.setPayStatus("0");  // 0: 未支付  1: 已支付
+        order.setConsignStatus("0"); // 0: 未发货, 1: 已发货
+        String orderId = idWorker.nextId() + "";
+        order.setId(orderId);
+        // 将订单生成,写入数据库订单表里
+        orderMapper.insertSelective(order);
+
+        // 4. 填充具体的订单项目数据到数据库的表里
+        for (OrderItem orderItem:orderItemList){
+            orderItem.setId(idWorker.nextId()+""); // 随机生成一个id
+            orderItem.setIsReturn("0"); // 0: 是未退货, 1: 已退货
+            orderItem.setOrderId(orderId);
+            orderItemMapper.insertSelective(orderItem);
+        }
+
+        // 5. 添加结束之后,扣减库存, 增加销量
+        // 扣减库存的话,是商品模块里面的数据, sku表里面的num字段 sale_num 销量
+        skuFeign.decrCount(order.getUsername());
+
+        // 增加一下用户的积分
+        userFeign.updateUserPoints(10);
+
+        // 添加任务数据
+        System.out.println("向订单数据库里面的任务表里面添加任务数据");
+        Task task = new Task();
+        task.setCreateTime(new Date());
+        task.setUpdateTime(new Date());
+        task.setMqExchange(RabbitMQConfig.EX_BUYING_ADDPOINTUSER);
+        task.setMqRoutingkey(RabbitMQConfig.CG_BUYING_ADDPOINT_KEY);
+
+        Map map = new HashMap();
+        map.put("username",order.getUsername());
+        map.put("orderId",orderId);
+        map.put("point",order.getPayMoney());
+        task.setRequestBody(JSON.toJSONString(map));
+        taskMapper.insertSelective(task);
+
+        // 6. 购物车里面的数据被支付后,购物车里面要进行数据的删除
+        redisTemplate.delete("cart_"+order.getUsername());
+
+        return orderId;
+    }
 }

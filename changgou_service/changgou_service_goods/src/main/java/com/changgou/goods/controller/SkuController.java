@@ -126,4 +126,11 @@ public class SkuController {
         return pageResult;
     }
 
+    // 修改商品的库存, tb_sku 的 num
+    @PostMapping("/decr/count")
+    public Result decrCount(@RequestParam("username")String username){
+        skuService.decrCount(username);
+        return new Result(true,StatusCode.OK,"库存扣减成功");
+    }
+
 }

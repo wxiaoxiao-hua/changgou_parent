@@ -63,7 +63,6 @@ public interface SkuService {
      */
     Page<Sku> findPage(Map<String, Object> searchMap, int page, int size);
 
-
-
-
+    // 扣减商品的库存
+    void decrCount(String username);
 }
